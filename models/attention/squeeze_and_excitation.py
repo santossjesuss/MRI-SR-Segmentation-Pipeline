@@ -4,11 +4,14 @@ import torch.nn as nn
 class SE_Block(nn.Module):
     def __init__(self, channels, reduction=16):
         super(SE_Block, self).__init__()
+        self.kernel_size = 1
+        self.padding = 0
+        
         self.squeeze = nn.AdaptiveAvgPool2d(1)
         self.excitation = nn.Sequential(
-            nn.Conv2d(channels, channels // reduction, 1, padding=0, bias=True),
+            nn.Conv2d(channels, channels // reduction, kernel_size=self.kernel_size, padding=self.padding, bias=True),
             nn.ReLU(inplace=True),
-            nn.Conv2d(channels // reduction, channels, 1, padding=0, bias=True),
+            nn.Conv2d(channels // reduction, channels, kernel_size=self.kernel_size, padding=self.padding, bias=True),
             nn.Sigmoid()
         )
 
@@ -18,9 +21,9 @@ class SE_Block(nn.Module):
         return x * y
 
 
-class SE_Block(nn.Module):
+class SE_BlockV2(nn.Module):
     def __init__(self, channels, reduction=16):
-        super(SE_Block, self).__init__()
+        super(SE_BlockV2, self).__init__()
         self.squeeze = nn.AdaptiveAvgPool2d(1)
         self.excitation = nn.Sequential(
             nn.Linear(channels, channels // reduction, bias=False),

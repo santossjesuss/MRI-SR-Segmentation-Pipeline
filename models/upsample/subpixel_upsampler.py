@@ -1,18 +1,18 @@
 import torch.nn as nn
-import math
-import subpixel_block
+from math import log2
+from subpixel_block import SubPixelBlock
 
 class SubPixelUpsampler(nn.Module):
-    def __init__(self, channels, upscale_factor, kernel_size=3, padding=1):
+    def __init__(self, channels, upscale_factor, kernel_size, padding):
         super(SubPixelUpsampler, self).__init__()
         self.upscale_factor = upscale_factor
-        self.upsample_stages = self._generate_upsample_stages(channels, kernel_size)
+        self.upsample_stages = self._generate_upsample_stages(channels, kernel_size, padding)
 
-    def _generate_upsample_stages(self, channels, kernel_size):
-        num_stages = int(math.log2(self.upscale_factor))
+    def _generate_upsample_stages(self, channels, kernel_size, padding):
+        num_stages = int(log2(self.upscale_factor))
         stages = []
         for _ in range(num_stages):
-            stages.append(subpixel_block.SubPixelBlock(channels, kernel_size=kernel_size))
+            stages.append(SubPixelBlock(channels, kernel_size=kernel_size, padding=padding))
         
         return nn.Sequential(*stages)
 

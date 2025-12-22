@@ -2,12 +2,12 @@ import torch
 import torch.nn as nn
 
 class SubPixelBlock(nn.Module):
-    def __init__(self, channels, kernel_size):
+    def __init__(self, channels, kernel_size, padding):
         super(SubPixelBlock, self).__init__()
         self.upscale_factor = 2
         out_channels = self._calc_out_channels(channels)
 
-        self.upsample_conv = nn.Conv2d(channels, out_channels, kernel_size=kernel_size, padding=kernel_size//2)
+        self.upsample_conv = nn.Conv2d(channels, out_channels, kernel_size=kernel_size, padding=padding)
         self.pixel_shuffle = nn.PixelShuffle(self.upscale_factor)
         self.relu = nn.ReLU(inplace=True)
 
