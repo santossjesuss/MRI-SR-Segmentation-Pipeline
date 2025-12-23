@@ -1,5 +1,5 @@
-from squeeze_and_excitation import SE_Block
-from efficient_channel_attention import ECA_Block
+from .squeeze_and_excitation import SE_Block
+from .efficient_channel_attention import ECA_Block
 
 class AttentionFactory:
     @staticmethod

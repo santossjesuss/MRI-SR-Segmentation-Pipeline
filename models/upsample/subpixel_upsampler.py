@@ -1,6 +1,6 @@
 import torch.nn as nn
 from math import log2
-from subpixel_block import SubPixelBlock
+from .subpixel_block import SubPixelBlock
 
 class SubPixelUpsampler(nn.Module):
     def __init__(self, channels, upscale_factor, kernel_size, padding):

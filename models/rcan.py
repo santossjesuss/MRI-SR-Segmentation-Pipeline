@@ -1,6 +1,6 @@
 import torch.nn as nn
-from residual_group import ResidualGroup
-from upsample.subpixel_upsampler import SubPixelUpsampler
+from .residual_group import ResidualGroup
+from .upsample.subpixel_upsampler import SubPixelUpsampler
 
 # Residual Channel Attention Network (RCAN) in 2D
 class RCAN(nn.Module):

@@ -1,5 +1,5 @@
 import torch.nn as nn
-from attention.attention_factory import AttentionFactory
+from .attention.attention_factory import AttentionFactory
     
 # Residual Channel Attention Block (RCAB)
 class RCAB(nn.Module):

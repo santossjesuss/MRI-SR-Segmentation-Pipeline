@@ -1,5 +1,5 @@
 import torch.nn as nn
-from residual_channel_attention_block import RCAB
+from .residual_channel_attention_block import RCAB
 
 class ResidualGroup(nn.Module):
     def __init__(self, channels, num_blocks, kernel_size, padding):
