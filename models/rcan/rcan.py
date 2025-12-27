@@ -1,23 +1,23 @@
 import torch.nn as nn
 from .residual_group import ResidualGroup
-from .upsample.subpixel_upsampler import SubPixelUpsampler
+from ..components.upsample.subpixel_upsampler import SubPixelUpsampler
 
 # Residual Channel Attention Network (RCAN) in 2D
 class RCAN(nn.Module):
-    def __init__(self, num_rg=5, num_rcab=10, channels=64, kernel_size=3, upscale_factor=2):
+    def __init__(self, in_channels=3, out_channels=3, num_rg=5, num_rcab=10, channels=64, kernel_size=3, upscale_factor=2):
         super(RCAN, self).__init__()
         self._validate_args(num_rg, num_rcab, channels, kernel_size, upscale_factor)
         self.kernel_size = kernel_size
         self.padding = kernel_size // 2
         residual_groups = [ResidualGroup(channels, num_rcab, self.kernel_size, self.padding) for _ in range(num_rg)]
 
-        self.shallow_feature_extractor = nn.Conv2d(3, channels, kernel_size=self.kernel_size, padding=self.padding)
+        self.shallow_feature_extractor = nn.Conv2d(in_channels, channels, kernel_size=self.kernel_size, padding=self.padding)
         self.residual_in_residual = nn.Sequential(
             *residual_groups,
             nn.Conv2d(channels, channels, kernel_size=self.kernel_size, padding=self.padding)
         )
         self.upsample = SubPixelUpsampler(channels, upscale_factor, kernel_size=self.kernel_size, padding=self.padding)
-        self.final_conv = nn.Conv2d(channels, 3, kernel_size=self.kernel_size, padding=self.padding)
+        self.final_conv = nn.Conv2d(channels, out_channels, kernel_size=self.kernel_size, padding=self.padding)
 
     def _validate_args(self, num_rg, num_rcab, channels, kernel_size, upscale_factor):
         if num_rg < 1:
