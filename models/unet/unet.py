@@ -1,8 +1,10 @@
 import torch
 import torch.nn as nn
 from .double_conv_block import DoubleConvolution as DoubleConv
+from .encoder_block import EncoderBlock
 from ..components.downsample.downsample import Downsample
 from ..components.downsample.max_pool_downsample import MaxPoolDownsample
+from .decoder_block import DecoderBlock
 
 class UNet(nn.Module):
     def __init__(self, in_channels=3, out_channels=1, base_channels=64, kernel_size=3):
@@ -14,24 +16,20 @@ class UNet(nn.Module):
         self.padding = self.conv_kernel_size // 2
         self.downsample_stride = 2
         self.upsample_stride = 2
-        self.downsample: Downsample = MaxPoolDownsample(kernel_size=self.pool_kernel_size, stride=self.downsample_stride)
 
-        self.pool = self.downsample()
-        self.encoder1 = DoubleConv(in_channels, base_channels, kernel_size=self.conv_kernel_size, padding=self.padding)
-        self.encoder2 = DoubleConv(base_channels, base_channels * 2, kernel_size=self.conv_kernel_size, padding=self.padding)
-        self.encoder3 = DoubleConv(base_channels * 2, base_channels * 4, kernel_size=self.conv_kernel_size, padding=self.padding)
-        self.encoder4 = DoubleConv(base_channels * 4, base_channels * 8, kernel_size=self.conv_kernel_size, padding=self.padding)
+        self.downsample: Downsample = MaxPoolDownsample(kernel_size=self.pool_kernel_size, stride=self.downsample_stride)
+        
+        self.encoder1 = EncoderBlock(in_channels, base_channels, kernel_size=self.conv_kernel_size, padding=self.padding, downsample=self.downsample)
+        self.encoder2 = EncoderBlock(base_channels, base_channels * 2, kernel_size=self.conv_kernel_size, padding=self.padding, downsample=self.downsample)
+        self.encoder3 = EncoderBlock(base_channels * 2, base_channels * 4, kernel_size=self.conv_kernel_size, padding=self.padding, downsample=self.downsample)
+        self.encoder4 = EncoderBlock(base_channels * 4, base_channels * 8, kernel_size=self.conv_kernel_size, padding=self.padding, downsample=self.downsample)
         
         self.bottleneck = DoubleConv(base_channels * 8, base_channels * 16, kernel_size=self.conv_kernel_size, padding=self.padding)
         
-        self.upsample4 = nn.ConvTranspose2d(base_channels * 16, base_channels * 8, self.upsample_kernel_size, stride=self.upsample_stride)
-        self.decoder4 = DoubleConv(base_channels * 16, base_channels * 8, kernel_size=self.conv_kernel_size, padding=self.padding)
-        self.upsample3 = nn.ConvTranspose2d(base_channels * 8, base_channels * 4, self.upsample_kernel_size, stride=self.upsample_stride)
-        self.decoder3 = DoubleConv(base_channels * 8, base_channels * 4, kernel_size=self.conv_kernel_size, padding=self.padding)
-        self.upsample2 = nn.ConvTranspose2d(base_channels * 4, base_channels * 2, self.upsample_kernel_size, stride=self.upsample_stride)
-        self.decoder2 = DoubleConv(base_channels * 4, base_channels * 2, kernel_size=self.conv_kernel_size, padding=self.padding)
-        self.upsample1 = nn.ConvTranspose2d(base_channels * 2, base_channels, self.upsample_kernel_size, stride=self.upsample_stride)
-        self.decoder1 = DoubleConv(base_channels * 2, base_channels, kernel_size=self.conv_kernel_size, padding=self.padding)
+        self.decoder4 = DecoderBlock(base_channels * 16, base_channels * 8, base_channels * 8, kernel_size=self.upsample_kernel_size, padding=self.padding, stride=self.upsample_stride)
+        self.decoder3 = DecoderBlock(base_channels * 8, base_channels * 4, base_channels * 4, kernel_size=self.upsample_kernel_size, padding=self.padding, stride=self.upsample_stride)
+        self.decoder2 = DecoderBlock(base_channels * 4, base_channels * 2, base_channels * 2, kernel_size=self.upsample_kernel_size, padding=self.padding, stride=self.upsample_stride)
+        self.decoder1 = DecoderBlock(base_channels * 2, base_channels, base_channels, kernel_size=self.upsample_kernel_size, padding=self.padding, stride=self.upsample_stride)
         
         self.final_conv = nn.Conv2d(base_channels, out_channels, kernel_size=1, padding=0)
 
@@ -49,23 +47,16 @@ class UNet(nn.Module):
             raise ValueError(f"Kernel size must be a positive integer. Current value: {kernel_size}")
 
     def forward(self, x):
-        enc1 = self.encoder1(x)
-        enc2 = self.encoder2(self.pool(enc1))
-        enc3 = self.encoder3(self.pool(enc2))
-        enc4 = self.encoder4(self.pool(enc3))
+        skip1, down1 = self.encoder1(x)
+        skip2, down2 = self.encoder2(down1)
+        skip3, down3 = self.encoder3(down2)
+        skip4, down4 = self.encoder4(down3)
 
-        bottleneck = self.bottleneck(self.pool(enc4))
+        bottleneck_enc = self.bottleneck(down4)
 
-        up4 = self.upsample4(bottleneck)
-        dec4 = self.decoder4(torch.cat([up4, enc4], dim=1))
-
-        up3 = self.upsample3(dec4)
-        dec3 = self.decoder3(torch.cat([up3, enc3], dim=1))
-
-        up2 = self.upsample2(dec3)
-        dec2 = self.decoder2(torch.cat([up2, enc2], dim=1))
-
-        up1 = self.upsample1(dec2)
-        dec1 = self.decoder1(torch.cat([up1, enc1], dim=1))
+        dec4 = self.decoder4(bottleneck_enc, skip_connection=skip4)
+        dec3 = self.decoder3(dec4, skip_connection=skip3)
+        dec2 = self.decoder2(dec3, skip_connection=skip2)
+        dec1 = self.decoder1(dec2, skip_connection=skip1)
 
         return self.final_conv(dec1)
