@@ -1,5 +1,5 @@
 import torch.nn as nn
-from .double_conv_block import DoubleConv
+from .double_conv_block import DoubleConvolution as DoubleConv
 from ..components.downsample.downsample import Downsample
 
 class EncoderBlock(nn.Module):

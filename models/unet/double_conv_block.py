@@ -24,7 +24,7 @@ class DoubleConvolution(nn.Module):
         # for group in [8, 4, 2, 1]:
         #     if channels % group == 0:
         #         return group
-        return 1
+        return 4
 
     def forward(self, x):
         features_1 = self.conv1(x)
