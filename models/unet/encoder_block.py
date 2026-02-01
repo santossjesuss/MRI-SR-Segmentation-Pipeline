@@ -11,4 +11,6 @@ class EncoderBlock(nn.Module):
     def forward(self, x):
         encoded_channels = self.double_conv(x)
         downsampled_channels = self.pool(encoded_channels)
+        print(f'[Encoder] Skip: {encoded_channels.shape}')
+        print(f'[Encoder] Downsampled: {downsampled_channels.shape}')
         return encoded_channels, downsampled_channels

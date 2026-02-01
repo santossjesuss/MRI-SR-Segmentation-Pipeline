@@ -18,6 +18,8 @@ class DecoderBlock(nn.Module):
 
     def forward(self, x, skip_connection):
         upsampled = self.upsample(x)
+        print(f'Upsampled x tensor {upsampled.shape}')
+        print(f'Skip connection tensor {skip_connection.shape}')
         concatenated = torch.cat((upsampled, skip_connection), dim=1)
         decoded = self.double_conv(concatenated)
         return decoded

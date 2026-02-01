@@ -10,26 +10,27 @@ class UNet(nn.Module):
     def __init__(self, in_channels=3, out_channels=1, base_channels=64, kernel_size=3):
         super(UNet, self).__init__()
         self._validate_args(in_channels, out_channels, base_channels, kernel_size)
-        self.conv_kernel_size = kernel_size
-        self.upsample_kernel_size = 2
+        # self.conv_kernel_size = kernel_size
+        # self.upsample_kernel_size = 2
+        self.kernel_size = kernel_size
         self.pool_kernel_size = 2
-        self.padding = self.conv_kernel_size // 2
+        self.padding = self.kernel_size // 2
         self.downsample_stride = 2
         self.upsample_stride = 2
 
         self.downsample: Downsample = MaxPoolDownsample(kernel_size=self.pool_kernel_size, stride=self.downsample_stride)
         
-        self.encoder1 = EncoderBlock(in_channels, base_channels, kernel_size=self.conv_kernel_size, padding=self.padding, downsample=self.downsample)
-        self.encoder2 = EncoderBlock(base_channels, base_channels * 2, kernel_size=self.conv_kernel_size, padding=self.padding, downsample=self.downsample)
-        self.encoder3 = EncoderBlock(base_channels * 2, base_channels * 4, kernel_size=self.conv_kernel_size, padding=self.padding, downsample=self.downsample)
-        self.encoder4 = EncoderBlock(base_channels * 4, base_channels * 8, kernel_size=self.conv_kernel_size, padding=self.padding, downsample=self.downsample)
+        self.encoder1 = EncoderBlock(in_channels, base_channels, kernel_size=self.kernel_size, padding=self.padding, downsample=self.downsample)
+        self.encoder2 = EncoderBlock(base_channels, base_channels * 2, kernel_size=self.kernel_size, padding=self.padding, downsample=self.downsample)
+        self.encoder3 = EncoderBlock(base_channels * 2, base_channels * 4, kernel_size=self.kernel_size, padding=self.padding, downsample=self.downsample)
+        self.encoder4 = EncoderBlock(base_channels * 4, base_channels * 8, kernel_size=self.kernel_size, padding=self.padding, downsample=self.downsample)
         
-        self.bottleneck = DoubleConv(base_channels * 8, base_channels * 16, kernel_size=self.conv_kernel_size, padding=self.padding)
+        self.bottleneck = DoubleConv(base_channels * 8, base_channels * 16, kernel_size=self.kernel_size, padding=self.padding)
         
-        self.decoder4 = DecoderBlock(base_channels * 16, base_channels * 8, base_channels * 8, kernel_size=self.upsample_kernel_size, padding=self.padding, stride=self.upsample_stride)
-        self.decoder3 = DecoderBlock(base_channels * 8, base_channels * 4, base_channels * 4, kernel_size=self.upsample_kernel_size, padding=self.padding, stride=self.upsample_stride)
-        self.decoder2 = DecoderBlock(base_channels * 4, base_channels * 2, base_channels * 2, kernel_size=self.upsample_kernel_size, padding=self.padding, stride=self.upsample_stride)
-        self.decoder1 = DecoderBlock(base_channels * 2, base_channels, base_channels, kernel_size=self.upsample_kernel_size, padding=self.padding, stride=self.upsample_stride)
+        self.decoder4 = DecoderBlock(base_channels * 16, base_channels * 8, base_channels * 8, kernel_size=self.kernel_size, padding=self.padding, stride=self.upsample_stride)
+        self.decoder3 = DecoderBlock(base_channels * 8, base_channels * 4, base_channels * 4, kernel_size=self.kernel_size, padding=self.padding, stride=self.upsample_stride)
+        self.decoder2 = DecoderBlock(base_channels * 4, base_channels * 2, base_channels * 2, kernel_size=self.kernel_size, padding=self.padding, stride=self.upsample_stride)
+        self.decoder1 = DecoderBlock(base_channels * 2, base_channels, base_channels, kernel_size=self.kernel_size, padding=self.padding, stride=self.upsample_stride)
         
         self.final_conv = nn.Conv2d(base_channels, out_channels, kernel_size=1, padding=0)
 
