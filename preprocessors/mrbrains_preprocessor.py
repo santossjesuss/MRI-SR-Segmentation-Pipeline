@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import nibabel as nib
-import tqdm
+from tqdm import tqdm
 
 class MRBrainSPreprocessor:
     def __init__(self, dataset_path=None, output_path=None):
@@ -10,7 +10,7 @@ class MRBrainSPreprocessor:
         self.modalities = ['T1.nii', 'T1_IR.nii', 'T2_FLAIR.nii']
         self.mask_name = 'LabelsForTraining.nii'
 
-        self._create_directories_if_not_exist(output_path)
+        self._create_directories_if_not_exist(self.output_path)
 
     def extract_stacked_slices(self):
         subjects = sorted(os.listdir(self.dataset_path))
@@ -28,6 +28,7 @@ class MRBrainSPreprocessor:
             self._save_slices(subject_id=subject, image_volume=multi_modal_volume, mask_volume=mask_volume)
 
     def extract_single_slices(self):
+        '''Do not use. It's better to stack modalities'''
         output_images_path = os.path.join(self.output_path, 'images')
         output_masks_path = os.path.join(self.output_path, 'masks')
         subjects = sorted(os.listdir(self.dataset_path))
@@ -52,11 +53,11 @@ class MRBrainSPreprocessor:
     def _save_slices(self, subject_id, image_volume, mask_volume):
         num_slices = image_volume.shape[2]
         for s in range(num_slices):
-            image_slice = image_volume[:, :, s, :]
+            image_slice = image_volume[:, :, s, :]  # (H, W, Slice, Modalities)
             mask_slice = mask_volume[:, :, s]
 
-            image_slice_path = f"{self.output_path}/images/subject{subject_id}_slice{s}.npy"
-            mask_slice_path = f"{self.output_path}/masks/subject{subject_id}_slice{s}.npy"
+            image_slice_path = os.path.join(self.output_path, 'images', f"subject{subject_id}_slice{s}.npy")
+            mask_slice_path = os.path.join(self.output_path, 'masks', f"subject{subject_id}_slice{s}.npy")
 
             np.save(image_slice_path, image_slice)
             np.save(mask_slice_path, mask_slice)
@@ -67,11 +68,13 @@ class MRBrainSPreprocessor:
         return image.get_fdata(dtype=np.float32)
     
     def _get_dataset_path(self, dataset_path):
-        default_path = '/data/MRBrainS/TrainingData'
+        base_path = os.path.dirname(__file__)
+        default_path = os.path.join(base_path, '..', 'data', 'MRBrainS', 'TrainingData')
         return dataset_path if dataset_path is not None else default_path
 
     def _get_output_path(self, output_path):
-        default_path = '/data/MRBrainS/preprocessed_2d'
+        base_path = os.path.dirname(__file__)
+        default_path = os.path.join(base_path, '..', 'data', 'MRBrainS', 'preprocessed_2d')
         return output_path if output_path is not None else default_path
     
     def _create_directories_if_not_exist(self, output_path):
