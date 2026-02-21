@@ -4,8 +4,9 @@ import torch
 from torch.utils.data import Dataset
 
 class MRBrainSPreprocessedDataset(Dataset):
-    def __init__(self, dataset_path=None, transform=None):
-        self.dataset_path = self._get_dataset_path(dataset_path)
+    def __init__(self, split, dataset_path=None, transform=None):
+        self.split = split
+        self.dataset_path = self._get_dataset_path(dataset_path, split)
         self.images = self._load_data(self.dataset_path, isMask=False)
         self.masks = self._load_data(self.dataset_path, isMask=True)
         self.transform = transform
@@ -28,13 +29,14 @@ class MRBrainSPreprocessedDataset(Dataset):
         return image, mask
 
     def _load_data(self, dataset_path, isMask):
-        if (isMask):
-            masks_path = os.path.join(dataset_path, 'masks')
-            return sorted(os.listdir(masks_path))
+        if isMask:
+            folder_path = os.path.join(dataset_path, 'masks')
         else:
-            images_path = os.path.join(dataset_path, 'images')
-            return sorted(os.listdir(images_path))
+            folder_path = os.path.join(dataset_path, 'images')
         
+        files = sorted(os.listdir(folder_path))
+        return [os.path.join(folder_path, f) for f in files if f.endswith('.npy')]
+
     def _normalize(self, image):
         for c in range(image.shape[2]):
             mean = image[:, :, c].mean()
@@ -49,7 +51,14 @@ class MRBrainSPreprocessedDataset(Dataset):
             mask = augmented['mask']        
         return image, mask
 
-    def _get_dataset_path(self, dataset_path):
+    def _get_dataset_path(self, dataset_path, split):
         base_path = os.path.dirname(__file__)
-        default_path = os.path.join(base_path, '..', 'data', 'MRBrainS', 'preprocessed_2d')
+
+        if split == 'train':
+            default_path = os.path.join(base_path, '..', 'data', 'MRBrainS', 'preprocessed_2d', 'train')
+        elif split == 'validation':
+            default_path = os.path.join(base_path, '..', 'data', 'MRBrainS', 'preprocessed_2d', 'validation')
+        elif split == 'test':
+            default_path = os.path.join(base_path, '..', 'data', 'MRBrainS', 'preprocessed_2d', 'test')
+
         return dataset_path if dataset_path is not None else default_path

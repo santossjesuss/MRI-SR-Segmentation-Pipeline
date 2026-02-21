@@ -28,7 +28,7 @@ class MRBrainSPreprocessor:
             self._save_slices(subject_id=subject, image_volume=multi_modal_volume, mask_volume=mask_volume)
 
     def extract_single_slices(self):
-        '''Do not use. It's better to stack modalities'''
+        '''Not recommended. It's better to stack modalities'''
         output_images_path = os.path.join(self.output_path, 'images')
         output_masks_path = os.path.join(self.output_path, 'masks')
         subjects = sorted(os.listdir(self.dataset_path))
