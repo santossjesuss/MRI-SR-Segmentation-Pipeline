@@ -1,3 +1,5 @@
 __pycache__
 venv
 data
+*.pth
+trained_models
