@@ -17,10 +17,6 @@ class BaseExperiments(ABC):
         pass
 
     @abstractmethod
-    def get_frozen_seg_frozen_sr(self):
-        pass
-
-    @abstractmethod
     def get_frozen_sr_trainable_seg(self):
         pass
 
@@ -29,17 +25,11 @@ class BaseExperiments(ABC):
         pass
 
     @abstractmethod
-    def get_frozen_seg_trainable_sr(self):
-        pass
-
-    @abstractmethod
-    def get_trainable_seg_frozen_sr(self):
-        pass
-
-    @abstractmethod
     def get_joint_sr_seg(self):
         pass
 
-    @abstractmethod
-    def get_joint_seg_sr(self):
-        pass
+    def _get_train_validation_sizes(self, train_dataset_size, train_perc):
+        train_size = int(train_perc * train_dataset_size)
+        validation_size = train_dataset_size - train_size
+
+        return train_size, validation_size

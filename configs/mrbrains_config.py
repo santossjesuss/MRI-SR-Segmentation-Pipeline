@@ -10,7 +10,8 @@ class MRBrainSConfig:
     seg_model_name: str = 'resnet34'
     seg_encoder_weights: str = None
     in_channels:int = 3    # Modalities (T1, T1_IR, T2_FLAIR)
-    seg_classes: int = 9
+    # seg_classes: int = 9
+    seg_classes: int = 3
 
     epochs: int = 50
     batch_size: int = 2
@@ -18,7 +19,8 @@ class MRBrainSConfig:
     ignore_index: int = 0
     include_background: bool = False
     shuffle_data: bool = True
-    num_workers: int = 2
+    # num_workers: int = 2
+    num_workers: int = 0
 
     dice_weight: float = 0.5
     cross_entropy_weight: float = 0.5
