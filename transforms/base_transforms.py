@@ -7,6 +7,9 @@ class BaseTransforms():
         self.img_downsample_mode = 'bilinear'
         self.mask_downsample_mode = 'nearest'
 
+    def normalize_binary_mask(self, mask):
+        return (mask == 255).long()
+
     def downsample_image(self, image):
         image = image.unsqueeze(0)
         lr_image = F.interpolate(image, scale_factor=self.downsample_factor, mode=self.img_downsample_mode)
