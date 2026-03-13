@@ -20,11 +20,7 @@ class SegmentationPipeline(BasePipeline):
             cross_entropy_weight=self.config.cross_entropy_weight
         )
         validation_metrics = SegmentationMetrics(
-            num_classes=self.config.seg_classes,
-            include_background=None, 
-            ignore_index=None
-            # include_background=self.config.include_background, 
-            # ignore_index=self.config.ignore_index
+            num_classes=self.config.seg_classes
         )
         optimizer = self._get_optimizer(model.parameters())
         scheduler = self._get_scheduler(optimizer)
