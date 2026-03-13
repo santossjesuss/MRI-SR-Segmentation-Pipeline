@@ -6,11 +6,11 @@ from trainers.segmentation_trainer import SegmentationTrainer
 from utils.model_persistence import load_model_for_inference
 
 class SegmentationPipeline(BasePipeline):
-    def __init__(self, config):
-        super().__init__(config)
-        self.config.seg_saving_name = os.path.join(self.config.saving_folder, self.config.seg_saving_name)
+    def __init__(self, config, saving_path):
+        saving_path = os.path.join(config.saving_folder, saving_path)
+        super().__init__(config, saving_path)
 
-    def run(self, train_dataset, validation_dataset):
+    def run(self, train_dataset, validation_dataset, data_resolution):
         train_loader = self._get_dataloader(train_dataset)
         validation_loader = self._get_dataloader(validation_dataset)
 
@@ -21,8 +21,10 @@ class SegmentationPipeline(BasePipeline):
         )
         validation_metrics = SegmentationMetrics(
             num_classes=self.config.seg_classes,
-            include_background=self.config.include_background, 
-            ignore_index=self.config.ignore_index
+            include_background=None, 
+            ignore_index=None
+            # include_background=self.config.include_background, 
+            # ignore_index=self.config.ignore_index
         )
         optimizer = self._get_optimizer(model.parameters())
         scheduler = self._get_scheduler(optimizer)
@@ -32,16 +34,17 @@ class SegmentationPipeline(BasePipeline):
             device=self.device,
             train_loader=train_loader,
             validation_loader=validation_loader,
+            data_resolution=data_resolution,
             criterion=criterion,
             validation_metrics=validation_metrics,
             optimizer=optimizer,
             scheduler=scheduler,
-            saving_name=self.config.seg_saving_name
+            saving_name=self.saving_path
         )
         
         return trainer.train(epochs=self.config.epochs)
     
-    def test(self, test_dataset):
+    def test(self, test_dataset, data_resolution):
         test_loader = self._get_dataloader(test_dataset)
         
         model = self._init_unet()
@@ -55,7 +58,8 @@ class SegmentationPipeline(BasePipeline):
         trainer = SegmentationTrainer(
             model=model,
             device=self.device,
-            validation_metrics=validation_metrics
+            validation_metrics=validation_metrics,
+            data_resolution=data_resolution
         )
 
         return trainer.test(test_loader)

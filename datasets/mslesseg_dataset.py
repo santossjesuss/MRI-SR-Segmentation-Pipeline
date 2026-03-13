@@ -25,6 +25,11 @@ class MSLesSegDataset(Dataset):
         hr_mask = read_image(mask_path, mode=ImageReadMode.GRAY)
         lr_mask = self.transforms.downsample_mask(hr_mask)
 
+        hr_mask = hr_mask.squeeze(0)
+        lr_mask = lr_mask.squeeze(0)
+        hr_mask = self.transforms.normalize_binary_mask(mask=hr_mask)
+        lr_mask = self.transforms.normalize_binary_mask(mask=lr_mask)
+        
         return hr_image, hr_mask, lr_image, lr_mask
 
     def _get_dataset_path(self, dataset_path):

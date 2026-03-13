@@ -2,11 +2,13 @@ import torch
 import torch.nn.functional as F
 from tqdm import tqdm
 from trainers.base_trainer import BaseTrainer
+from enums.resolution_enum import Resolution
 from utils.model_persistence import save_model_for_inference, load_model_for_inference
 
 class SegmentationTrainer(BaseTrainer):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, data_resolution=Resolution.HR, **kwargs):
+        super().__init__(**kwargs)
+        self.data_resolution = data_resolution
 
     def train(self, epochs):
         best_validation_score = float('-inf')
@@ -36,9 +38,13 @@ class SegmentationTrainer(BaseTrainer):
 
         progress_bar_description = f"Epoch {epoch+1}/{total_epochs}"
         progress_bar = tqdm(self.train_loader, desc=progress_bar_description)
-        for image, masks in progress_bar:
-            image = image.to(self.device, dtype=torch.float32)
-            masks = masks.to(self.device, dtype=torch.long)
+        for hr_image, hr_masks, lr_image, lr_masks in progress_bar:
+            if self.data_resolution == Resolution.HR:
+                image = hr_image.to(self.device, dtype=torch.float32)
+                masks = hr_masks.to(self.device, dtype=torch.long)
+            else:
+                image = lr_image.to(self.device, dtype=torch.float32)
+                masks = lr_masks.to(self.device, dtype=torch.long)
 
             self.optimizer.zero_grad(set_to_none=True)
             predicted_masks_logits = self.model(image)
@@ -57,15 +63,18 @@ class SegmentationTrainer(BaseTrainer):
         self.validation_metrics.reset()
 
         with torch.no_grad():
-            for image, masks in tqdm(dataloader, desc=description):
-                image = image.to(self.device, dtype=torch.float32)
-                masks = masks.to(self.device, dtype=torch.long)
+            for hr_image, hr_masks, lr_image, lr_masks in tqdm(dataloader, desc=description):
+                if self.data_resolution == Resolution.HR:
+                    image = hr_image.to(self.device, dtype=torch.float32)
+                    masks = hr_masks.to(self.device, dtype=torch.long)
+                else:
+                    image = lr_image.to(self.device, dtype=torch.float32)
+                    masks = lr_masks.to(self.device, dtype=torch.long)
 
                 predicted_masks_logits = self.model(image)                      # (Batch, Classes, H, W)
-                one_hot_masks = F.one_hot(masks, num_classes=9).permute(0, 3, 1, 2)
-                self.validation_metrics.update(predicted_masks_logits, one_hot_masks)
-                # predicted_masks = torch.argmax(predicted_masks_logits, dim=1)
-                # self.validation_metrics.update(predicted_masks, masks)
+                predicted_masks = torch.argmax(predicted_masks_logits, dim=1)   # (Batch, H, W)
+                
+                self.validation_metrics.update(predicted_masks, masks)
 
         return self.validation_metrics.compute()
 

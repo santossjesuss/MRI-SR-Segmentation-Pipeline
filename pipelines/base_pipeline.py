@@ -6,16 +6,17 @@ from models.rcan.rcan import RCAN
 from utils.gpu import enable_cuda
 
 class BasePipeline(ABC):
-    def __init__(self, config):
+    def __init__(self, config, saving_path):
         self.config = config
         self.device = enable_cuda()
+        self.saving_path = saving_path
 
     @abstractmethod
-    def run(self, train_dataset, validation_dataset):
+    def run(self, train_dataset, validation_dataset, data_resolution=None):
         pass
 
     @abstractmethod
-    def test(self, test_dataset):
+    def test(self, test_dataset, data_resolution=None):
         pass
 
     def _get_dataloader(self, dataset):

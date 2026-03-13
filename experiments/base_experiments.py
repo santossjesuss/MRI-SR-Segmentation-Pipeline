@@ -9,7 +9,11 @@ class BaseExperiments(ABC):
         pass
 
     @abstractmethod
-    def get_segmentation(self):
+    def get_hr_segmentation(self):
+        pass
+
+    @abstractmethod
+    def get_lr_segmentation(self):
         pass
 
     @abstractmethod

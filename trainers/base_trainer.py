@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from enums.resolution_enum import Resolution
 
 class BaseTrainer(ABC):
     def __init__(
