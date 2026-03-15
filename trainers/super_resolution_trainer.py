@@ -7,37 +7,14 @@ class SuperResolutionTrainer(BaseTrainer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def train(self, epochs):
-        best_validation_score = float('-inf')
-
-        for epoch in range(epochs):
-            train_loss = self._train_epoch(epoch, epochs)
-            validation_metrics = self._validate()
-
-            validation_score = validation_metrics['psnr_mean']
-            self.scheduler.step(validation_score)
-
-            print(f'Epoch {epoch+1}/{epochs}')
-            print(f'\tTrain Loss: {train_loss:.4f}')
-            print(f'\tValidation Score: {validation_score:.4f} (PSNR)')
-            print(f'\tValidation Metrics: {validation_metrics}')
-
-            if validation_score > best_validation_score:
-                best_validation_score = validation_score
-                save_model_for_inference(self.model, self.saving_name)
-
-        load_model_for_inference(self.saving_name)
-        return self.model
-
     def _train_epoch(self, epoch, total_epochs):
         self.model.train()
         epoch_loss = 0
 
         progress_bar_description = f"Epoch {epoch+1}/{total_epochs}"
         progress_bar = tqdm(self.train_loader, desc=progress_bar_description)
-        for lr_image, hr_image in progress_bar:
-            lr_image = lr_image.to(self.device, dtype=torch.float32)
-            hr_image = hr_image.to(self.device, dtype=torch.float32)
+        for batch in progress_bar:
+            lr_image, hr_image = self._prepare_batch(batch)
 
             self.optimizer.zero_grad(set_to_none=True)
             sr_image = self.model(lr_image)
@@ -56,17 +33,21 @@ class SuperResolutionTrainer(BaseTrainer):
         self.validation_metrics.reset()
 
         with torch.no_grad():
-            for lr_image, hr_image in tqdm(self.validation_loader, desc='validating'):
-                lr_image = lr_image.to(self.device, dtype=torch.float32)
-                hr_image = hr_image.to(self.device, dtype=torch.float32)
+            for batch in tqdm(self.validation_loader, desc='validating'):
+                lr_image, hr_image = self._prepare_batch(batch)
 
                 sr_image = self.model(lr_image)
                 self.validation_metrics.update(sr_image, hr_image)
 
         return self.validation_metrics.compute()
     
-    def _validate(self):
-        return self._evaluate(self.validation_loader, description='Validating')
-    
-    def test(self, test_loader):
-        return self._evaluate(test_loader, description='Testing')
+    def _prepare_batch(self, batch):
+        hr_image, hr_masks, lr_image, lr_masks = batch  # is it necessary that I unwrap it positionally or it's by name?
+
+        lr_image = lr_image.to(self.device, dtype=torch.float32)
+        hr_image = hr_image.to(self.device, dtype=torch.float32)
+
+        return lr_image, hr_image
+
+    def get_primary_metric_name(self):
+        return "psnr_mean"

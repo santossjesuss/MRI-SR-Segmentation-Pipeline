@@ -9,28 +9,6 @@ class SegmentationTrainer(BaseTrainer):
     def __init__(self, data_resolution=Resolution.HR, **kwargs):
         super().__init__(**kwargs)
         self.data_resolution = data_resolution
-
-    def train(self, epochs):
-        best_validation_score = float('-inf')
-
-        for epoch in range(epochs):
-            train_loss = self._train_epoch(epoch, epochs)
-            validation_metrics = self._validate()
-
-            validation_score = validation_metrics['dice']
-            self.scheduler.step(validation_score)
-
-            print(f'Epoch {epoch+1}/{epochs}')
-            print(f'\tTrain Loss: {train_loss:.4f}')
-            print(f'\tValidation Score: {validation_score:.4f} (Dice)')
-            print(f'\tValidation Metrics: {validation_metrics}')
-
-            if validation_score > best_validation_score:
-                best_validation_score = validation_score
-                save_model_for_inference(self.model, self.saving_name)
-
-        load_model_for_inference(self.saving_name)
-        return self.model
     
     def _train_epoch(self, epoch, total_epochs):
         self.model.train()
@@ -38,13 +16,8 @@ class SegmentationTrainer(BaseTrainer):
 
         progress_bar_description = f"Epoch {epoch+1}/{total_epochs}"
         progress_bar = tqdm(self.train_loader, desc=progress_bar_description)
-        for hr_image, hr_masks, lr_image, lr_masks in progress_bar:
-            if self.data_resolution == Resolution.HR:
-                image = hr_image.to(self.device, dtype=torch.float32)
-                masks = hr_masks.to(self.device, dtype=torch.long)
-            else:
-                image = lr_image.to(self.device, dtype=torch.float32)
-                masks = lr_masks.to(self.device, dtype=torch.long)
+        for batch in progress_bar:
+            image, masks = self._prepare_batch(batch)
 
             self.optimizer.zero_grad(set_to_none=True)
             predicted_masks_logits = self.model(image)
@@ -63,13 +36,8 @@ class SegmentationTrainer(BaseTrainer):
         self.validation_metrics.reset()
 
         with torch.no_grad():
-            for hr_image, hr_masks, lr_image, lr_masks in tqdm(dataloader, desc=description):
-                if self.data_resolution == Resolution.HR:
-                    image = hr_image.to(self.device, dtype=torch.float32)
-                    masks = hr_masks.to(self.device, dtype=torch.long)
-                else:
-                    image = lr_image.to(self.device, dtype=torch.float32)
-                    masks = lr_masks.to(self.device, dtype=torch.long)
+            for batch in tqdm(dataloader, desc=description):
+                image, masks = self._prepare_batch(batch)
 
                 predicted_masks_logits = self.model(image)                      # (Batch, Classes, H, W)
                 predicted_masks = torch.argmax(predicted_masks_logits, dim=1)   # (Batch, H, W)
@@ -77,9 +45,17 @@ class SegmentationTrainer(BaseTrainer):
                 self.validation_metrics.update(predicted_masks, masks)
 
         return self.validation_metrics.compute()
-
-    def _validate(self):
-        return self._evaluate(self.validation_loader, description='Validating')
     
-    def test(self, test_loader):
-        return self._evaluate(test_loader, description='Testing')
+    def _prepare_batch(self, batch):
+        hr_image, hr_masks, lr_image, lr_masks = batch
+        if self.data_resolution == Resolution.HR:
+            image = hr_image.to(self.device, dtype=torch.float32)
+            masks = hr_masks.to(self.device, dtype=torch.long)
+        else:
+            image = lr_image.to(self.device, dtype=torch.float32)
+            masks = lr_masks.to(self.device, dtype=torch.long)
+
+        return image, masks
+
+    def get_primary_metric_name(self):
+        return "dice"
