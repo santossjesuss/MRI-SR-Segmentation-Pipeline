@@ -4,7 +4,7 @@ from ..components.upsample.subpixel_upsampler import SubPixelUpsampler
 
 # Residual Channel Attention Network (RCAN) in 2D
 class RCAN(nn.Module):
-    def __init__(self, in_channels=3, out_channels=3, num_rg=5, num_rcab=10, channels=64, kernel_size=3, upscale_factor=2):
+    def __init__(self, in_channels, out_channels, num_rg=5, num_rcab=10, channels=64, kernel_size=3, upscale_factor=2):
         super(RCAN, self).__init__()
         self._validate_args(num_rg, num_rcab, channels, kernel_size, upscale_factor)
         self.kernel_size = kernel_size
