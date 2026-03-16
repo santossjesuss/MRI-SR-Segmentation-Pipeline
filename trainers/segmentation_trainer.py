@@ -3,7 +3,6 @@ import torch.nn.functional as F
 from tqdm import tqdm
 from trainers.base_trainer import BaseTrainer
 from enums.resolution_enum import Resolution
-from utils.model_persistence import save_model_for_inference, load_model_for_inference
 
 class SegmentationTrainer(BaseTrainer):
     def __init__(self, data_resolution=Resolution.HR, **kwargs):

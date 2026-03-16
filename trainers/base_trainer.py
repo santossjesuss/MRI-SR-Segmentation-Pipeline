@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from enums.resolution_enum import Resolution
 from utils.model_persistence import save_model_for_inference, load_model_for_inference
 
 class BaseTrainer(ABC):
@@ -13,7 +12,8 @@ class BaseTrainer(ABC):
             validation_metrics=None, 
             optimizer=None, 
             scheduler=None, 
-            saving_name=None
+            saving_name=None,
+            logger=None
         ):
         super().__init__()
         self.device = device
@@ -25,6 +25,7 @@ class BaseTrainer(ABC):
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.saving_name = saving_name
+        self.logger = logger
 
     def train(self, epochs):
         best_validation_score = float('-inf')
@@ -36,14 +37,18 @@ class BaseTrainer(ABC):
             validation_score = validation_metrics[self.get_primary_metric_name()]
             self.scheduler.step(validation_score)
 
-            print(f'Epoch {epoch+1}/{epochs}')
-            print(f'\tTrain Loss: {train_loss:.4f}')
-            print(f'\tValidation Main Score: {self.get_primary_metric_name()}')
-            print(f'\tValidation Metrics: {validation_metrics}')
+            if self.logger:
+                self.logger.log_metric("Loss", train_loss, epoch, phase="Training")
+                self.logger.log_metrics(validation_metrics, epoch, phase="Validation")
 
             if validation_score > best_validation_score:
                 best_validation_score = validation_score
                 save_model_for_inference(self.model, self.saving_name)
+            
+            print(f'Epoch {epoch+1}/{epochs}')
+            print(f'\tTrain Loss: {train_loss:.4f}')
+            print(f'\tValidation Metrics: {validation_metrics}')
+            # print(f'\tValidation Main Score: {self.get_primary_metric_name()}')
 
         load_model_for_inference(self.saving_name)
         return self.model

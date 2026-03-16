@@ -1,7 +1,6 @@
 import torch
 from tqdm import tqdm
 from trainers.base_trainer import BaseTrainer
-from utils.model_persistence import save_model_for_inference, load_model_for_inference
 
 class SuperResolutionTrainer(BaseTrainer):
     def __init__(self, *args, **kwargs):
@@ -28,12 +27,12 @@ class SuperResolutionTrainer(BaseTrainer):
 
         return epoch_loss / len(self.train_loader)
 
-    def _evaluate(self):
+    def _evaluate(self, dataloader, description):
         self.model.eval()
         self.validation_metrics.reset()
 
         with torch.no_grad():
-            for batch in tqdm(self.validation_loader, desc='validating'):
+            for batch in tqdm(dataloader, desc=description):
                 lr_image, hr_image = self._prepare_batch(batch)
 
                 sr_image = self.model(lr_image)
@@ -42,7 +41,7 @@ class SuperResolutionTrainer(BaseTrainer):
         return self.validation_metrics.compute()
     
     def _prepare_batch(self, batch):
-        hr_image, hr_masks, lr_image, lr_masks = batch  # is it necessary that I unwrap it positionally or it's by name?
+        hr_image, _, lr_image, _ = batch
 
         lr_image = lr_image.to(self.device, dtype=torch.float32)
         hr_image = hr_image.to(self.device, dtype=torch.float32)
@@ -50,4 +49,4 @@ class SuperResolutionTrainer(BaseTrainer):
         return lr_image, hr_image
 
     def get_primary_metric_name(self):
-        return "psnr_mean"
+        return "psnr"
