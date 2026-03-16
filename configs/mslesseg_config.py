@@ -2,21 +2,26 @@ from dataclasses import dataclass
 from configs.base_config import BaseConfig
 
 @dataclass
-class MSLesSeg(BaseConfig):
+class MSLesSegConfig(BaseConfig):
+    in_channels: int = 1
+
+    # SuperRes config
+    sr_out_channels: int = 1
     scale_factor: float = 2
 
-    seg_model_name: str = 'resnet34'
-    seg_encoder_weights: str = None
-    in_channels: int = 1
+    # Segmentation config
     seg_classes: int = 2
-        
+    
+    # Dataset config
     train_perc_size: float = 0.8
     view: str = 'axial'
 
-    sr_saving_name: str = 'mslesseg_sr'
-    hr_seg_saving_name: str = 'mslesseg_hr_seg'
-    lr_seg_saving_name: str = 'mslesseg_lr_seg'
-    frozen_sr_frozen_seg: str = 'mslesseg_frozen_sr_frozen_seg (baseline)'
-    frozen_sr_trainable_seg: str = 'mslesseg_frozen_sr_trainable_seg'
-    trainable_sr_frozen_seg: str = 'mslesseg_trainable_sr_frozen_seg'
-    joint_sr_seg: str = 'mslesseg_joint_sr_seg'
+    # Saving config
+    dataset_name = "mslesseg"
+    sr_saving_name: str = f'{dataset_name}_{BaseConfig.sr_saving_name}'
+    hr_seg_saving_name: str = f'{dataset_name}_{BaseConfig.hr_seg_saving_name}'
+    lr_seg_saving_name: str = f'{dataset_name}_{BaseConfig.lr_seg_saving_name}'
+    frozen_sr_frozen_seg: str = f'{dataset_name}_{BaseConfig.frozen_sr_frozen_seg}'
+    frozen_sr_trainable_seg: str = f'{dataset_name}_{BaseConfig.frozen_sr_trainable_seg}'
+    trainable_sr_frozen_seg: str = f'{dataset_name}_{BaseConfig.trainable_sr_frozen_seg}'
+    joint_sr_seg: str = f'{dataset_name}_{BaseConfig.joint_sr_seg}'
