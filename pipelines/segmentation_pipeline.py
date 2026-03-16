@@ -6,9 +6,8 @@ from trainers.segmentation_trainer import SegmentationTrainer
 from utils.model_persistence import load_model_for_inference
 
 class SegmentationPipeline(BasePipeline):
-    def __init__(self, config, saving_path):
-        saving_path = os.path.join(config.saving_folder, saving_path)
-        super().__init__(config, saving_path)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def run(self, train_dataset, validation_dataset, data_resolution):
         train_loader = self._get_dataloader(train_dataset)
@@ -24,6 +23,7 @@ class SegmentationPipeline(BasePipeline):
         )
         optimizer = self._get_optimizer(model.parameters())
         scheduler = self._get_scheduler(optimizer)
+        logger = self._get_logger()
 
         trainer = SegmentationTrainer(
             model=model,
@@ -35,7 +35,8 @@ class SegmentationPipeline(BasePipeline):
             validation_metrics=validation_metrics,
             optimizer=optimizer,
             scheduler=scheduler,
-            saving_name=self.saving_path
+            saving_name=self.saving_path,
+            logger=logger
         )
         
         return trainer.train(epochs=self.config.epochs)

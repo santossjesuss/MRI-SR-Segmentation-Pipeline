@@ -6,11 +6,10 @@ from trainers.super_resolution_trainer import SuperResolutionTrainer
 from utils.model_persistence import load_model_for_inference
 
 class SuperResolutionPipeline(BasePipeline):
-    def __init__(self, config):
-        super().__init__(config)
-        self.config.sr_saving_name = os.path.join(self.config.saving_folder, self.config.sr_saving_name)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    def run(self, train_dataset, validation_dataset):
+    def run(self, train_dataset, validation_dataset, data_resolution=None):
         train_loader = self._get_dataloader(train_dataset)
         validation_loader = self._get_dataloader(validation_dataset)
 
@@ -19,6 +18,7 @@ class SuperResolutionPipeline(BasePipeline):
         validation_metrics = SuperResolutionMetrics()
         optimizer = self._get_optimizer(model.parameters())
         scheduler = self._get_scheduler(optimizer)
+        logger = self._get_logger()
 
         trainer = SuperResolutionTrainer(
             model=model,
@@ -29,7 +29,8 @@ class SuperResolutionPipeline(BasePipeline):
             validation_metrics=validation_metrics,
             optimizer=optimizer,
             scheduler=scheduler,
-            saving_name=self.config.sr_saving_name
+            saving_name=self.saving_path,
+            logger=logger
         )
 
         return trainer.train(epochs=self.config.epochs)

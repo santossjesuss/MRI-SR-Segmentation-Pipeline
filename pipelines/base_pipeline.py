@@ -1,15 +1,18 @@
 from abc import ABC, abstractmethod
+import os
 import torch.optim as optim
 from torch.utils.data import DataLoader
 import segmentation_models_pytorch as smp
 from models.rcan.rcan import RCAN
+from loggers.tensorboard_logger import TensorBoardLogger
 from utils.gpu import enable_cuda
 
 class BasePipeline(ABC):
-    def __init__(self, config, saving_path):
+    def __init__(self, config, experiment_name):
         self.config = config
         self.device = enable_cuda()
-        self.saving_path = saving_path
+        self.experiment_name = experiment_name
+        self.saving_path = os.path.join(self.config.saving_folder, f'{experiment_name}.pth')
 
     @abstractmethod
     def run(self, train_dataset, validation_dataset, data_resolution=None):
@@ -33,7 +36,8 @@ class BasePipeline(ABC):
             out_channels=self.config.sr_out_channels,
             num_rg=self.config.num_rg,
             num_rcab=self.config.num_rcab,
-            channels=self.config.sr_inner_channels
+            channels=self.config.sr_inner_channels,
+            upscale_factor=self.config.scale_factor
         )
     
     def _init_unet(self):
@@ -57,3 +61,7 @@ class BasePipeline(ABC):
             factor=0.5,
             patience=5
         )
+    
+    def _get_logger(self):
+        log_path = os.path.join("logs", self.experiment_name)
+        return TensorBoardLogger(log_dir=log_path)
