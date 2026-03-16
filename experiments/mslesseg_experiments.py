@@ -1,7 +1,7 @@
 from torch.utils.data import random_split
 from experiments.base_experiments import BaseExperiments
 from experiments.experiment import Experiment
-from configs.mslesseg_config import MSLesSeg
+from configs.mslesseg_config import MSLesSegConfig
 from datasets.mslesseg_dataset import MSLesSegDataset
 from enums.resolution_enum import Resolution
 from pipelines.super_resolution_pipeline import SuperResolutionPipeline
@@ -10,7 +10,7 @@ from pipelines.segmentation_pipeline import SegmentationPipeline
 class MSLesSegExperiments(BaseExperiments):
     def __init__(self):
         super().__init__()
-        self.config = MSLesSeg()
+        self.config = MSLesSegConfig()
 
         complete_train_dataset = MSLesSegDataset(isTraining=True, view=self.config.view, scale_factor=self.config.scale_factor)
         train_size, validation_size = super()._get_train_validation_sizes(len(complete_train_dataset), self.config.train_perc_size)
