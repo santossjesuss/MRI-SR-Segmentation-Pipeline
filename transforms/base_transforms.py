@@ -4,11 +4,14 @@ class BaseTransforms():
     def __init__(self, scale_factor):
         self.scale_factor = scale_factor
         self.downsample_factor = self._calc_downsample_factor(scale_factor)
-        self.img_downsample_mode = 'bilinear'
+        self.img_downsample_mode = 'bicubic'
         self.mask_downsample_mode = 'nearest'
 
+    def normalize_image(self, image):
+        return image.float() / 255.0
+
     def normalize_binary_mask(self, mask):
-        return (mask == 255).long()
+        return (mask > 0).long()
 
     def downsample_image(self, image):
         image = image.unsqueeze(0)
