@@ -5,7 +5,7 @@ from pipelines.super_resolution_pipeline import SuperResolutionPipeline
 from pipelines.segmentation_pipeline import SegmentationPipeline
 from pipelines.frozen_sr_frozen_seg_pipeline import FrozenSRFrozenSegPipeline
 from pipelines.frozen_sr_trainable_seg_pipeline import FrozenSRTrainableSegPipeline
-from pipelines.joint_sr_seg_pipeline import JointSRSegPipeline
+from pipelines.joint_sr_seg_e2e_pipeline import JointSRSegE2EPipeline
 from transforms.segmentation_transforms import segmentation_train_transform, segmentation_validation_transform
 from datasets.mrbrains_preprocessed_dataset import MRBrainSPreprocessedDataset
 
@@ -73,7 +73,7 @@ class MRBRainSExperiments(BaseExperiments):
     def get_joint_sr_seg(self):
         return Experiment(
             name=self.config.joint_sr_seg,
-            pipeline=JointSRSegPipeline,
+            pipeline=JointSRSegE2EPipeline,
             config=self.config,
             training_dataset=self.train_dataset,
             validation_dataset=self.validation_dataset,
