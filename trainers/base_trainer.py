@@ -20,7 +20,7 @@ class BaseTrainer(ABC):
         self.train_loader = train_loader
         self.validation_loader = validation_loader
         self.model = model.to(device)
-        self.criterion = criterion.to(device)
+        self.criterion = criterion.to(device) if criterion else None
         self.validation_metrics = validation_metrics.to(device)
         self.optimizer = optimizer
         self.scheduler = scheduler
