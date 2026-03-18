@@ -1,3 +1,4 @@
+import os
 import torch
 
 def save_model_for_inference(model, saving_name):
@@ -8,6 +9,9 @@ def save_model_for_inference(model, saving_name):
     print(f'\t New best model saved')
 
 def load_model_for_inference(model, saving_name):
+    if not os.path.exists(saving_name):
+        raise ValueError(f'Provided path for loading the model "{saving_name}" does not exist.')
+    
     model.load_state_dict(torch.load(saving_name))
 
 def save_model_checkpoint(self, epoch, validation_name, validation_score):
