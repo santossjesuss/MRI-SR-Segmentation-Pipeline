@@ -22,6 +22,8 @@ class BaseConfig:
     # Losses config
     dice_weight: float = 0.5
     cross_entropy_weight: float = 0.5
+    sr_loss_weight: float = 0.5
+    seg_loss_weight: float = 0.5
 
     # Saving config
     folder_name: str = 'trained_models'

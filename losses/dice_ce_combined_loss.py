@@ -13,5 +13,4 @@ class DiceCECombinedLoss(nn.Module):
         ce_loss = self.cross_entropy_loss(predicted_masks_logits, true_masks)
         dice_loss = self.dice_loss(predicted_masks_logits, true_masks)
 
-        combined_loss = self.cross_entropy_weight * ce_loss + self.dice_weight * dice_loss
-        return combined_loss
+        return self.cross_entropy_weight * ce_loss + self.dice_weight * dice_loss

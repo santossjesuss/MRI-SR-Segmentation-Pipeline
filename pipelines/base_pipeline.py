@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 import segmentation_models_pytorch as smp
 from models.rcan.rcan import RCAN
 from losses.dice_ce_combined_loss import DiceCECombinedLoss
+from losses.sr_seg_combined_loss import SRSegCombinedLoss
 from metrics.superres_metrics import SuperResolutionMetrics
 from metrics.segmentation_metrics import SegmentationMetrics
 from loggers.tensorboard_logger import TensorBoardLogger
@@ -57,19 +58,27 @@ class BasePipeline(ABC):
         return nn.L1Loss()
 
     def _get_seg_loss(self):
-        DiceCECombinedLoss(
+        return DiceCECombinedLoss(
             dice_weight=self.config.dice_weight, 
             cross_entropy_weight=self.config.cross_entropy_weight
         )
 
     def _get_combined_sr_seg_loss(self):
-        pass
+        sr_loss = self._get_sr_loss()
+        seg_loss = self._get_seg_loss()
+        
+        return SRSegCombinedLoss(
+            sr_loss_fn=sr_loss,
+            seg_loss_fn=seg_loss,
+            sr_weight=self.config.sr_loss_weight,
+            seg_weight=self.config.seg_loss_weight
+        )
 
     def _get_sr_validation_metrics(self):
         return SuperResolutionMetrics()
 
     def _get_seg_validation_metrics(self):
-        SegmentationMetrics(
+        return SegmentationMetrics(
             num_classes=self.config.seg_classes
         )
 
