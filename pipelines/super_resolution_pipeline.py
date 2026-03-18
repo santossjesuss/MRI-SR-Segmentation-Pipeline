@@ -1,7 +1,4 @@
-import os
-import torch.nn as nn
 from pipelines.base_pipeline import BasePipeline
-from metrics.superres_metrics import SuperResolutionMetrics
 from trainers.super_resolution_trainer import SuperResolutionTrainer
 from utils.model_persistence import load_model_for_inference
 
@@ -9,13 +6,13 @@ class SuperResolutionPipeline(BasePipeline):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def run(self, train_dataset, validation_dataset, data_resolution=None):
+    def run(self, train_dataset, validation_dataset):
         train_loader = self._get_dataloader(train_dataset)
         validation_loader = self._get_dataloader(validation_dataset)
 
         model = self._init_rcan()
-        criterion = nn.L1Loss()
-        validation_metrics = SuperResolutionMetrics()
+        criterion = self._get_sr_loss()
+        validation_metrics = self._get_sr_validation_metrics()
         optimizer = self._get_optimizer(model.parameters())
         scheduler = self._get_scheduler(optimizer)
         logger = self._get_logger()
@@ -39,9 +36,9 @@ class SuperResolutionPipeline(BasePipeline):
         test_loader = self._get_dataloader(test_dataset)
 
         model = self._init_rcan()
-        validation_metrics = SuperResolutionMetrics()
+        validation_metrics = self._get_sr_validation_metrics()
 
-        load_model_for_inference(model, self.config.sr_saving_name)
+        load_model_for_inference(model, self.saving_path)
 
         trainer = SuperResolutionTrainer(
             model=model,

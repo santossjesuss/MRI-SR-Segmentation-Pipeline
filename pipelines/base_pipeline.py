@@ -1,25 +1,30 @@
 from abc import ABC, abstractmethod
 import os
+import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 import segmentation_models_pytorch as smp
 from models.rcan.rcan import RCAN
+from losses.dice_ce_combined_loss import DiceCECombinedLoss
+from metrics.superres_metrics import SuperResolutionMetrics
+from metrics.segmentation_metrics import SegmentationMetrics
 from loggers.tensorboard_logger import TensorBoardLogger
 from utils.gpu import enable_cuda
 
 class BasePipeline(ABC):
-    def __init__(self, config, experiment_name):
+    def __init__(self, config, experiment_name, data_resolution=None):
         self.config = config
         self.device = enable_cuda()
         self.experiment_name = experiment_name
-        self.saving_path = os.path.join(self.config.saving_folder, f'{experiment_name}.pth')
+        self.saving_path = os.path.join(self.config.folder_name, f'{experiment_name}.pth')
+        self.data_resolution = data_resolution
 
     @abstractmethod
-    def run(self, train_dataset, validation_dataset, data_resolution=None):
+    def run(self, train_dataset, validation_dataset):
         pass
 
     @abstractmethod
-    def test(self, test_dataset, data_resolution=None):
+    def test(self, test_dataset):
         pass
 
     def _get_dataloader(self, dataset):
@@ -48,6 +53,26 @@ class BasePipeline(ABC):
             classes=self.config.seg_classes
         )
     
+    def _get_sr_loss(self):
+        return nn.L1Loss()
+
+    def _get_seg_loss(self):
+        DiceCECombinedLoss(
+            dice_weight=self.config.dice_weight, 
+            cross_entropy_weight=self.config.cross_entropy_weight
+        )
+
+    def _get_combined_sr_seg_loss(self):
+        pass
+
+    def _get_sr_validation_metrics(self):
+        return SuperResolutionMetrics()
+
+    def _get_seg_validation_metrics(self):
+        SegmentationMetrics(
+            num_classes=self.config.seg_classes
+        )
+
     def _get_optimizer(self, model_params):
         return optim.Adam(
             model_params,

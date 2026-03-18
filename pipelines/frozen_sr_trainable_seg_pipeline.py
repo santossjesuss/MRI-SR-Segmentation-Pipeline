@@ -5,9 +5,8 @@ from trainers.multi_stage_trainer import MultiStageTrainer
 from utils.model_persistence import load_model_for_inference
 
 class FrozenSRTrainableSegPipeline(BasePipeline):
-    def __init__(self, config):
-        self.config.frozen_sr_trainable_seg = os.path.join(self.config.saving_folder, self.config.frozen_sr_trainable_seg)
-        super().__init__(config=config)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def run(self, train_dataset, validation_dataset):
         train_loader = self._get_dataloader(train_dataset)
@@ -15,10 +14,11 @@ class FrozenSRTrainableSegPipeline(BasePipeline):
 
         sr_model = self._init_rcan()
         seg_model = self._init_unet()
-        criterion = None
-        validation_metrics = None
+        criterion = self._get_seg_loss()
+        validation_metrics = self._get_seg_validation_metrics()
 
-        load_model_for_inference(sr_model, self.config.sr_saving_name)
+        sr_path = os.path.join(self.config.folder_name, f'{self.config.sr_name}.pth')
+        load_model_for_inference(model=sr_model, saving_name=sr_path)
 
         frozen_sr_trainable_seg_model = MultiStageModel(
             sr_model, 
@@ -38,7 +38,7 @@ class FrozenSRTrainableSegPipeline(BasePipeline):
             validation_metrics=validation_metrics,
             optimizer=optimizer,
             scheduler=scheduler,
-            saving_name=self.config.frozen_sr_trainable_seg
+            saving_name=self.saving_path
         )
 
         return trainer.train(epochs=self.config.epochs)
@@ -48,7 +48,7 @@ class FrozenSRTrainableSegPipeline(BasePipeline):
 
         sr_model = self._init_rcan()
         seg_model = self._init_unet()
-        validation_metrics = None
+        validation_metrics = self._get_seg_validation_metrics()
 
         frozen_sr_trainable_seg_model = MultiStageModel(
             sr_model, 
@@ -56,8 +56,8 @@ class FrozenSRTrainableSegPipeline(BasePipeline):
             freeze_stage_1=True, 
             freeze_stage_2=True
         )
-        
-        load_model_for_inference(model=frozen_sr_trainable_seg_model, saving_name=self.config.frozen_sr_trainable_seg)
+
+        load_model_for_inference(model=frozen_sr_trainable_seg_model, saving_name=self.saving_path)
 
         trainer = MultiStageTrainer(
             model=frozen_sr_trainable_seg_model,
