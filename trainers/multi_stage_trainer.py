@@ -1,33 +1,11 @@
 import torch
 from tqdm import tqdm
 from trainers.base_trainer import BaseTrainer
-from utils.model_persistence import save_model_for_inference, load_model_for_inference
 
 class MultiStageTrainer(BaseTrainer):
-    def __int__(self, *args, **kwargs):
+    def __init__(self, *args, use_combined_loss=False, **kwargs):
         super().__init__(*args, **kwargs)
-
-    def train(self, epochs):
-        best_validation_score = float('-inf')
-
-        for epoch in range(epochs):
-            train_loss = self._train_epoch(epoch=epoch, total_epochs=epochs)
-            validation_metrics = self._validate()
-
-            validation_score = validation_metrics['dice_mean'] # might use other metric
-            self.scheduler.step(validation_score)
-
-            print(f'Epoch {epoch+1}/{epochs}')
-            print(f'\tTrain Loss {train_loss:.4f}')
-            print(f'\tValidation Score: {validation_score:.4f} (Dice)') # might use other metric
-            print(f'\tValidation Metrics: {validation_metrics}')
-
-            if validation_score > best_validation_score:
-                best_validation_score = validation_score
-                save_model_for_inference(model=self.model, saving_name=self.saving_name)
-
-            load_model_for_inference(model=self.model, saving_name=self.saving_name, device=self.device) # device?
-            return self.model
+        self.use_combined_loss = use_combined_loss
 
     def _train_epoch(self, epoch, total_epochs):
         self.model.train()
@@ -35,13 +13,15 @@ class MultiStageTrainer(BaseTrainer):
 
         progress_bar_description = f"Epoch {epoch+1}/{total_epochs}"
         progress_bar = tqdm(self.train_loader, desc=progress_bar_description)
-        for lr_image, hr_masks in progress_bar:
-            lr_image = lr_image.to(self.device, dtype=torch.float32)
-            hr_masks = hr_masks.to(self.device, dtype=torch.long)
+        for batch in progress_bar:
+            lr_image, hr_image, hr_masks = self._prepare_batch(batch)
 
             self.optimizer.zero_grad(set_to_none=True)
-            predicted_hr_masks_logits = self.model(lr_image)
-            loss = self.criterion(predicted_hr_masks_logits, hr_masks)
+            pred_hr_masks_logits, pred_hr_image = self.model(lr_image)
+            if self.use_combined_loss:
+                loss = self.criterion(pred_hr_image, hr_image, pred_hr_masks_logits, hr_masks) # create combined loss
+            else:
+                loss = self.criterion(pred_hr_masks_logits, hr_masks)
             
             loss.backward()
             self.optimizer.step()
@@ -56,17 +36,24 @@ class MultiStageTrainer(BaseTrainer):
         self.validation_metrics.reset()
 
         with torch.no_grad():
-            for lr_image, hr_masks in tqdm(dataloader, desc=description):
-                lr_image = lr_image.to(self.device, dtype=torch.float32)
-                hr_masks = hr_masks.to(self.device, dtype=torch.long)
+            for batch in tqdm(dataloader, desc=description):
+                lr_image, hr_masks = self._prepare_batch(batch)
 
-                predicted_hr_masks_logits = self.model(lr_image)                      # (Batch, Classes, H, W)
-                self.validation_metrics.update(predicted_hr_masks_logits, hr_masks)
+                pred_hr_masks_logits = self.model(lr_image)                    # (Batch, Classes, H, W)
+                predicted_masks = torch.argmax(pred_hr_masks_logits, dim=1)    # (Batch, H, W)
+
+                self.validation_metrics.update(predicted_masks, hr_masks)
 
         return self.validation_metrics.compute()
-
-    def _validate(self):
-        return self._evaluate(self.validation_loader, description='Validating')
     
-    def test(self, test_loader):
-        return self._evaluate(test_loader, description='Testing')
+    def _prepare_batch(self, batch):
+        hr_image, hr_masks, lr_image, _ = batch
+        
+        hr_image = hr_image.to(self.device, dtype=torch.float32)
+        lr_image = lr_image.to(self.device, dtype=torch.float32)
+        hr_masks = hr_masks.to(self.device, dtype=torch.long)
+
+        return lr_image, hr_image, hr_masks
+
+    def get_primary_metric_name(self):
+        return "dice"   # might use other metric
