@@ -24,11 +24,12 @@ class BaseConfig:
     cross_entropy_weight: float = 0.5
 
     # Saving config
-    saving_folder: str = 'trained_models'
-    sr_saving_name: str = 'sr'
-    hr_seg_saving_name: str = 'hr_seg'
-    lr_seg_saving_name: str = 'lr_seg'
-    frozen_sr_frozen_seg: str = 'frozen_sr_frozen_seg (baseline)'
+    folder_name: str = 'trained_models'
+    sr_name: str = 'sr'
+    hr_seg_name: str = 'hr_seg'
+    lr_seg_name: str = 'lr_seg'
+    frozen_sr_frozen_seg: str = 'frozen_sr_frozen_seg'
     frozen_sr_trainable_seg: str = 'frozen_sr_trainable_seg'
     trainable_sr_frozen_seg: str = 'trainable_sr_frozen_seg'
-    joint_sr_seg: str = 'joint_sr_seg'
+    joint_sr_seg_e2e: str = 'joint_sr_seg_e2e'
+    joint_sr_seg_combined: str = 'joint_sr_seg_combined'

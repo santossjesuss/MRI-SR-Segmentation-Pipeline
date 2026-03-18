@@ -3,6 +3,7 @@ from configs.base_config import BaseConfig
 
 @dataclass
 class MSLesSegConfig(BaseConfig):
+    # Common SuperRes and Seg config
     in_channels: int = 1
 
     # SuperRes config
@@ -18,10 +19,11 @@ class MSLesSegConfig(BaseConfig):
 
     # Saving config
     dataset_name = "mslesseg"
-    sr_saving_name: str = f'{dataset_name}_{BaseConfig.sr_saving_name}'
-    hr_seg_saving_name: str = f'{dataset_name}_{BaseConfig.hr_seg_saving_name}'
-    lr_seg_saving_name: str = f'{dataset_name}_{BaseConfig.lr_seg_saving_name}'
+    sr_name: str = f'{dataset_name}_{BaseConfig.sr_name}'
+    hr_seg_name: str = f'{dataset_name}_{BaseConfig.hr_seg_name}'
+    lr_seg_name: str = f'{dataset_name}_{BaseConfig.lr_seg_name}'
     frozen_sr_frozen_seg: str = f'{dataset_name}_{BaseConfig.frozen_sr_frozen_seg}'
     frozen_sr_trainable_seg: str = f'{dataset_name}_{BaseConfig.frozen_sr_trainable_seg}'
     trainable_sr_frozen_seg: str = f'{dataset_name}_{BaseConfig.trainable_sr_frozen_seg}'
-    joint_sr_seg: str = f'{dataset_name}_{BaseConfig.joint_sr_seg}'
+    joint_sr_seg_e2e: str = f'{dataset_name}_{BaseConfig.joint_sr_seg_e2e}'
+    joint_sr_seg_combined: str = f'{dataset_name}_{BaseConfig.joint_sr_seg_combined}'
