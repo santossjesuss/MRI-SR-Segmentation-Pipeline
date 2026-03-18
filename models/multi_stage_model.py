@@ -12,9 +12,9 @@ class MultiStageModel(nn.Module):
         self._set_grad(self.model_stage_2, not freeze_stage_2)
 
     def forward(self, x):
-        x = self.model_stage_1(x)
-        x = self.model_stage_2(x)
-        return x
+        stage_1_res = self.model_stage_1(x)
+        stage_2_res = self.model_stage_2(stage_1_res)
+        return stage_2_res, stage_1_res
 
     def _set_grad(self, model, required_grad):
         for param in model.parameters():
