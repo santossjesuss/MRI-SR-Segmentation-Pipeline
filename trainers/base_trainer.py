@@ -48,7 +48,6 @@ class BaseTrainer(ABC):
             print(f'Epoch {epoch+1}/{epochs}')
             print(f'\tTrain Loss: {train_loss:.4f}')
             print(f'\tValidation Metrics: {validation_metrics}')
-            # print(f'\tValidation Main Score: {self.get_primary_metric_name()}')
 
         load_model_for_inference(self.saving_name)
         return self.model
@@ -65,7 +64,13 @@ class BaseTrainer(ABC):
         return self._evaluate(self.validation_loader, description='Validating')
     
     def test(self, test_loader):
-        return self._evaluate(test_loader, description='Testing')
+        testing_metrics = self._evaluate(test_loader, description='Testing')
+        if self.logger:
+            self.logger.log_metrics(metrics_dict=testing_metrics, phase='Testing')
+
+        print(f'\tTesting Metrics: {testing_metrics}')
+
+        return testing_metrics
     
     @abstractmethod
     def _prepare_batch(self, batch):

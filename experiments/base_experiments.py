@@ -29,7 +29,11 @@ class BaseExperiments(ABC):
         pass
 
     @abstractmethod
-    def get_joint_sr_seg(self):
+    def get_joint_sr_seg_e2e(self):
+        pass
+
+    @abstractmethod
+    def get_joint_sr_seg_combined(self):
         pass
 
     def _get_train_validation_sizes(self, train_dataset_size, train_perc):

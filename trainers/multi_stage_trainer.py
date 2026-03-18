@@ -19,7 +19,7 @@ class MultiStageTrainer(BaseTrainer):
             self.optimizer.zero_grad(set_to_none=True)
             pred_hr_masks_logits, pred_hr_image = self.model(lr_image)
             if self.use_combined_loss:
-                loss = self.criterion(pred_hr_image, hr_image, pred_hr_masks_logits, hr_masks) # create combined loss
+                loss = self.criterion(pred_hr_image, hr_image, pred_hr_masks_logits, hr_masks)
             else:
                 loss = self.criterion(pred_hr_masks_logits, hr_masks)
             
@@ -37,9 +37,9 @@ class MultiStageTrainer(BaseTrainer):
 
         with torch.no_grad():
             for batch in tqdm(dataloader, desc=description):
-                lr_image, hr_masks = self._prepare_batch(batch)
+                lr_image, _, hr_masks = self._prepare_batch(batch)
 
-                pred_hr_masks_logits = self.model(lr_image)                    # (Batch, Classes, H, W)
+                pred_hr_masks_logits, _ = self.model(lr_image)
                 predicted_masks = torch.argmax(pred_hr_masks_logits, dim=1)    # (Batch, H, W)
 
                 self.validation_metrics.update(predicted_masks, hr_masks)
@@ -56,4 +56,4 @@ class MultiStageTrainer(BaseTrainer):
         return lr_image, hr_image, hr_masks
 
     def get_primary_metric_name(self):
-        return "dice"   # might use other metric
+        return "dice"

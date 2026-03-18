@@ -28,7 +28,7 @@ class MSLesSegExperiments(BaseExperiments):
     def get_super_resolution(self):
         return Experiment(
             config=self.config,
-            name=self.config.sr_saving_name,
+            name=self.config.sr_name,
             pipeline=SuperResolutionPipeline,
             training_dataset=self.train_dataset,
             validation_dataset=self.validation_dataset,
@@ -38,7 +38,7 @@ class MSLesSegExperiments(BaseExperiments):
     def get_hr_segmentation(self):
         return Experiment(
             config=self.config,
-            name=self.config.hr_seg_saving_name,
+            name=self.config.hr_seg_name,
             pipeline=SegmentationPipeline,
             training_dataset=self.train_dataset,
             validation_dataset=self.validation_dataset,
@@ -49,7 +49,7 @@ class MSLesSegExperiments(BaseExperiments):
     def get_lr_segmentation(self):
         return Experiment(
             config=self.config,
-            name=self.config.lr_seg_saving_name,
+            name=self.config.lr_seg_name,
             pipeline=SegmentationPipeline,
             training_dataset=self.train_dataset,
             validation_dataset=self.validation_dataset,
