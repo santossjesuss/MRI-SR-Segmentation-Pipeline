@@ -3,8 +3,9 @@ from experiments.mslesseg_experiments import MSLesSegExperiments
 from experiments.fcdlesseg_experiments import FCDLesSegExperiments
 
 def main():
-    ms_experiments = MSLesSegExperiments()
-    fcd_experiments = FCDLesSegExperiments()
+    # -|Quick checkings|-
+    # experiments = MSLesSegExperiments()
+    # experiments = FCDLesSegExperiments()
     # experiment = experiments.get_super_resolution()
     # experiment = experiments.get_lr_segmentation()
     # experiment = experiments.get_hr_segmentation()
@@ -17,6 +18,9 @@ def main():
     # experiment.run()
     # experiment.test()
 
+    # -|Complete experiments training|-
+    ms_experiments = MSLesSegExperiments()
+    fcd_experiments = FCDLesSegExperiments()
     execute_training_batch(experiments=ms_experiments)
     execute_training_batch(experiments=fcd_experiments)
 
