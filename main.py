@@ -1,7 +1,10 @@
+from utils.execution_batches import execute_training_batch
 from experiments.mslesseg_experiments import MSLesSegExperiments
+from experiments.fcdlesseg_experiments import FCDLesSegExperiments
 
 def main():
-    experiments = MSLesSegExperiments()
+    # experiments = MSLesSegExperiments()
+    experiments = FCDLesSegExperiments()
     experiment = experiments.get_super_resolution()
     # experiment = experiments.get_lr_segmentation()
     # experiment = experiments.get_hr_segmentation()
@@ -13,6 +16,8 @@ def main():
 
     experiment.run()
     # experiment.test()
+
+    # execute_training_batch(experiments=experiments)
 
 if __name__ == "__main__":
     main()
