@@ -1,5 +1,6 @@
 import torch
 from torchmetrics.image import PeakSignalNoiseRatio, StructuralSimilarityIndexMeasure
+from torchmetrics.regression import MeanAbsoluteError
 from metrics.base_metrics import BaseMetrics
 
 class SuperResolutionMetrics(BaseMetrics):
@@ -7,6 +8,7 @@ class SuperResolutionMetrics(BaseMetrics):
         super().__init__()
         self.metrics['psnr'] = PeakSignalNoiseRatio(data_range=1.0)
         self.metrics['ssim'] = StructuralSimilarityIndexMeasure(data_range=1.0)
+        self.metrics['mae'] = MeanAbsoluteError()
 
     def update(self, sr_images, hr_images):
         sr_images = torch.clamp(sr_images, 0, 1)
