@@ -49,7 +49,7 @@ class BaseTrainer(ABC):
             print(f'\tTrain Loss: {train_loss:.4f}')
             print(f'\tValidation Metrics: {validation_metrics}')
 
-        load_model_for_inference(self.saving_name)
+        load_model_for_inference(self.model, self.saving_name)
         return self.model
 
     @abstractmethod
