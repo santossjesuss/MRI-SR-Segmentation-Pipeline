@@ -17,7 +17,7 @@ class TrainableSRFrozenSegPipeline(BasePipeline):
         criterion = self._get_seg_loss()
         validation_metrics = self._get_seg_validation_metrics()
 
-        seg_path = os.path.join(self.config.saving_folder, f'{self.config.hr_seg_name}.pth')
+        seg_path = os.path.join(self.config.folder_name, f'{self.config.hr_seg_name}.pth')
         load_model_for_inference(model=seg_model, saving_name=seg_path)
 
         trainable_sr_frozen_seg_model = MultiStageModel(
