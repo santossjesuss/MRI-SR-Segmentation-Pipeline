@@ -2,6 +2,7 @@ import torch.nn as nn
 
 class SRSegCombinedLoss(nn.Module):
     def __init__(self, sr_loss_fn, seg_loss_fn, sr_weight=0.5, seg_weight=0.5):
+        super().__init__()
         self.sr_loss_fn = sr_loss_fn
         self.seg_loss_fn = seg_loss_fn
         self.sr_weight = sr_weight
