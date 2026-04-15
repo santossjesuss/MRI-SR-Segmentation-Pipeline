@@ -35,6 +35,7 @@ class JointSRSegCombinedPipeline(BasePipeline):
             validation_metrics=validation_metrics,
             optimizer=optimizer,
             scheduler=scheduler,
+            use_combined_loss=True,
             saving_name=self.saving_path
         )
 
