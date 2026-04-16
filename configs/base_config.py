@@ -3,16 +3,15 @@ from dataclasses import dataclass
 @dataclass
 class BaseConfig:
     # Training config
-    epochs: int = 50
-    batch_size: int = 2
+    epochs: int = 100
+    batch_size: int = 16
     learning_rate: float = 1e-4
     shuffle_data: bool = True
-    num_workers: int = 0
-    # num_workers: int = 2
+    num_workers: int = 4
 
     # SuperRes config
-    num_rg: int = 2
-    num_rcab: int = 4
+    num_rg: int = 5
+    num_rcab: int = 8
     sr_inner_channels: int = 64
 
     # Segmentation config
