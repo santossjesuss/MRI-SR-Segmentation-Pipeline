@@ -19,7 +19,7 @@ Architectures used: **RCAN** (Super-Resolution, custom implementation) and **UNe
 ## Pipeline configurations
 | # | Configuration | SR weights | Seg weights | Loss |
 |---|--------------|-----------|------------|------|
-| 1 | Seg only (baseline) | — | pretrained, frozen | Seg |
+| 1 | Seg only (baseline) | — | trainable | Seg |
 | 2 | SR → Seg (both frozen) | pretrained, frozen | pretrained, frozen | — |
 | 3 | SR → Seg (seg trainable) | pretrained, frozen | trainable | Seg |
 | 4 | SR → Seg (SR trainable) | trainable | pretrained, frozen | Seg |
@@ -28,7 +28,7 @@ Architectures used: **RCAN** (Super-Resolution, custom implementation) and **UNe
 
 An image that represents the pipeline structure is shown below (Note that this image is a general representation that does not represents the combinations):
 
-![General Pipeline](.repo/general-pipeline.svg)
+![General Pipeline](.repo/general-pipeline.png)
 *General pipeline structure*
 
 Below is an input image that would be fed to the model (i.e. low-resolution image):
@@ -48,24 +48,32 @@ We can see the results obtained by the experiments in the table shown below:
 
 ## Experiment design
 ### Phase 1 — Baseline
-This is the basic experiment. From this phase we assess whether introducing a Super-Resolution → Segmentation pipeline improves performance over a standalone segmentation model.
+This is the basic experiment. From this phase we assess whether introducing a Super-Resolution → Segmentation pipeline improves performance over a standalone segmentation model. The following image serves as a visual example of the experiment workflow.
 
-The dataset is downsampled using a deterministic method (bicubic interpolation) applied to both images and masks, resulting in tuples of the form: (LR image, LR mask, HR image, HR mask).
+![Experiment Workflow](.repo/benchmark-templates.png)
+
+The dataset is downsampled using a deterministic method (bicubic interpolation) applied to both images and masks, resulting in tuples of the form: (LR image, LR mask, HR image, HR mask). 
+
+This phase is composed of the following components:
 
 - *Segmentation only*: A segmentation model is trained directly on the low-resolution dataset, producing low-resolution segmentation masks.
 
 - *SR → Seg (both frozen)*: A two-stage pipeline is constructed using pretrained SR and Segmentation networks, both kept frozen. The SR model upsamples the low-resolution input; from this, the Segmentation model produces a high-resolution mask. Predicted masks are downsampled via bicubic interpolation for comparison with the first baseline.
 
+The core idea is to compare the performance of the single segmentation model over the LR space with the performance of the pipeline, which is downsampled to the same resolution as the first model to make a proportional comparison.
+
 ### Phase 2 — Fine-tuning strategies
 This phase explores different training configurations to improve upon the baseline results.
 
 - *Frozen SR → trainable Seg*: The SR network is pretrained and kept frozen, while the segmentation network is trained on the SR outputs.
-- *Trainable SR, frozen Seg*: The SR network is trained while the pretrained segmentation model remains frozen.
+- *Trainable SR → frozen Seg*: The SR network is trained while the pretrained segmentation model remains frozen.
 - *End-to-end*: Both SR and segmentation networks are trained jointly as a single model. Optimization is driven solely by the segmentation loss.
 - *Joint loss*: Both networks are trained jointly using a composite loss. An SR reconstruction loss on the high-resolution output and a segmentation loss on the predicted mask, combined as a mean of the two losses.
+
+The same dynamics as the first phase applies here. In this part, we explore different approaches for designing the pipeline, and we compare the performance of these variants against the single segmentation model over the same LR space.
 
 ## Setup
 
 
 ## Acknowledgements 
-This project is the Final Degree Project (TFG) for the [University of Malaga (UMA)](https://www.uma.es), supervised by the professors Rafael Marcos Luque Baena and Karl Thurnhofer Hemsi.
+This project is a Final Degree Project (TFG) for the [University of Malaga (UMA)](https://www.uma.es), supervised by the professors Rafael Marcos Luque Baena and Karl Thurnhofer Hemsi.
